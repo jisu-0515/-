@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>근로계약서 용어 빙고</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBF6EA;
+    --surface: #FFFFFF;
+    --ink: #2E2620;
+    --ink-muted: #8A7F6E;
+    --coral: #E0604C;
+    --coral-dark: #C24632;
+    --coral-tint: #FCEAE6;
+    --amber: #F0A93E;
+    --amber-dark: #C97F1B;
+    --amber-tint: #FDF1DC;
+    --border: #E9DFC8;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #241E17; --surface: #2E2620; --ink: #F6EFE2; --ink-muted: #B7AB97;
+      --coral: #E97A63; --coral-dark: #F0937E; --coral-tint: #3B2822;
+      --amber: #F0B75B; --amber-dark: #F6CE8C; --amber-tint: #3A2E1A;
+      --border: #443A2C; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #241E17; --surface: #2E2620; --ink: #F6EFE2; --ink-muted: #B7AB97;
+    --coral: #E97A63; --coral-dark: #F0937E; --coral-tint: #3B2822;
+    --amber: #F0B75B; --amber-dark: #F6CE8C; --amber-tint: #3A2E1A;
+    --border: #443A2C; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { font-size: 18px; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html.large-text { font-size: 22px; }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    background:
+      linear-gradient(var(--bg), var(--bg)),
+      repeating-linear-gradient(0deg, transparent, transparent 27px, var(--border) 27px, var(--border) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, var(--border) 27px, var(--border) 28px);
+    background-blend-mode: normal;
+    background-attachment: local, local, local;
+    opacity: 1;
+    color: var(--ink);
+    font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    line-height: 1.6;
+    padding: 2rem 1.1rem 4rem;
+  }
+  body::before { content: none; }
+
+  .wrap { max-width: 640px; margin: 0 auto; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .kicker { font-size: 0.92rem; color: var(--ink-muted); margin: 0 0 0.3rem; font-weight: 500; }
+  h1 { font-size: 1.7rem; font-weight: 900; margin: 0; letter-spacing: -0.01em; }
+
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 999px; padding: 0.6rem 1rem; font-size: 0.9rem;
+    font-weight: 700; color: var(--ink); cursor: pointer; min-height: 48px;
+    font-family: inherit;
+  }
+  .pill-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 1.6rem; box-shadow: 0 2px 0 var(--border);
+  }
+
+  /* ---------- 설정 화면 ---------- */
+  .size-choices { display: flex; gap: 0.85rem; margin: 1rem 0 1.6rem; }
+  .size-btn {
+    flex: 1; padding: 1.4rem 0.5rem; border-radius: 16px; border: 2.5px solid var(--border);
+    background: var(--surface); font-family: inherit; cursor: pointer; text-align: center;
+    min-height: 92px;
+  }
+  .size-btn .n { font-size: 1.9rem; font-weight: 900; display: block; }
+  .size-btn .l { font-size: 0.85rem; color: var(--ink-muted); font-weight: 500; }
+  .size-btn[aria-pressed="true"] { border-color: var(--amber); background: var(--amber-tint); }
+  .size-btn[aria-pressed="true"] .n { color: var(--amber-dark); }
+
+  .word-count-note { font-size: 0.9rem; color: var(--ink-muted); margin: 0 0 1.4rem; }
+  .word-count-note strong { color: var(--ink); }
+  .word-count-note.warn { color: var(--coral-dark); font-weight: 700; }
+
+  details.word-edit { margin-bottom: 1.6rem; }
+  details.word-edit summary {
+    cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--ink);
+    padding: 0.4rem 0;
+  }
+  details.word-edit textarea {
+    width: 100%; min-height: 180px; margin-top: 0.7rem; font-family: inherit;
+    font-size: 1rem; padding: 0.85rem; border-radius: 12px; border: 2px solid var(--border);
+    background: var(--bg); color: var(--ink); resize: vertical;
+  }
+  details.word-edit .hint { font-size: 0.82rem; color: var(--ink-muted); margin-top: 0.5rem; }
+
+  .btn {
+    font-family: inherit; font-size: 1.08rem; font-weight: 700;
+    padding: 1rem 1.7rem; border-radius: 14px; border: none;
+    cursor: pointer; min-height: 56px; width: 100%;
+  }
+  .btn-primary { background: var(--amber); color: #3A2708; }
+  .btn-primary:disabled { background: var(--border); color: var(--ink-muted); cursor: not-allowed; }
+  .btn-ghost { background: transparent; border: 2px solid var(--border); color: var(--ink); }
+  .btn-row { display: flex; gap: 0.7rem; margin-top: 0.9rem; }
+  .btn-row .btn { width: auto; flex: 1; }
+
+  /* ---------- 빙고판 (채우기 / 게임) ---------- */
+  .board {
+    display: grid; gap: 0.6rem; margin: 0 auto 1.6rem;
+  }
+  .board.size-3 { grid-template-columns: repeat(3, 1fr); }
+  .board.size-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .cell {
+    aspect-ratio: 1 / 1; border-radius: 14px; border: 2.5px dashed var(--border);
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0.4rem; cursor: pointer; font-family: inherit;
+    font-weight: 700; font-size: 0.98rem; color: var(--ink); line-height: 1.25;
+    position: relative;
+  }
+  .board.size-4 .cell { font-size: 0.85rem; }
+  .cell.filled { border-style: solid; border-color: var(--coral); }
+  .cell.empty-slot { color: var(--ink-muted); font-weight: 500; font-size: 1.6rem; }
+
+  .cell.marked {
+    background: var(--amber); border-color: var(--amber-dark); color: #3A2708;
+  }
+  .cell.marked::after {
+    content: '✓'; position: absolute; top: 4px; right: 8px; font-size: 1rem; opacity: 0.55;
+  }
+  .cell.in-line { box-shadow: 0 0 0 3px var(--coral) inset; }
+
+  .progress-note { text-align: center; font-size: 0.95rem; color: var(--ink-muted); margin-bottom: 1.2rem; }
+  .progress-note strong { color: var(--ink); }
+
+  /* ---------- 단어 은행 (스티커 노트 느낌) ---------- */
+  .word-bank {
+    display: flex; flex-wrap: wrap; gap: 0.9rem 0.8rem; justify-content: center;
+    padding: 1.4rem 0.6rem 0.6rem;
+  }
+  .word-chip {
+    position: relative; background: var(--surface); border: 2px solid var(--coral);
+    border-radius: 8px; padding: 0.85rem 1.1rem; font-family: inherit;
+    font-weight: 700; font-size: 1rem; color: var(--ink); cursor: pointer;
+    min-height: 52px; min-width: 64px;
+    box-shadow: 2px 3px 0 var(--coral-tint);
+  }
+  .word-chip:nth-child(4n+1) { transform: rotate(-2.2deg); }
+  .word-chip:nth-child(4n+2) { transform: rotate(1.6deg); }
+  .word-chip:nth-child(4n+3) { transform: rotate(-1.3deg); }
+  .word-chip:nth-child(4n+4) { transform: rotate(2.4deg); }
+  .word-chip::before {
+    content: ''; position: absolute; top: -9px; left: 50%; transform: translateX(-50%) rotate(-4deg);
+    width: 30px; height: 14px; background: var(--coral); opacity: 0.55; border-radius: 2px;
+  }
+  .word-chip:active { transform: scale(0.96); }
+
+  .bank-empty { text-align: center; color: var(--ink-muted); font-size: 0.95rem; padding: 1rem; }
+
+  /* ---------- 게임 화면 상단 상태 ---------- */
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--amber-tint); border: 1px solid var(--amber); border-radius: 16px;
+    padding: 1rem 1.3rem; margin-bottom: 1.4rem;
+  }
+  .status-bar .label { font-size: 0.85rem; color: var(--ink-muted); font-weight: 500; }
+  .status-bar .count { font-size: 1.7rem; font-weight: 900; color: var(--amber-dark); }
+
+  .celebrate-toast {
+    position: fixed; left: 50%; top: 1.4rem; transform: translateX(-50%) translateY(-140%);
+    background: var(--ink); color: var(--bg); font-weight: 900; font-size: 1.05rem;
+    padding: 0.9rem 1.6rem; border-radius: 999px; z-index: 50;
+    transition: transform 0.35s ease;
+    padding-top: calc(0.9rem + env(safe-area-inset-top, 0px));
+  }
+  .celebrate-toast.show { transform: translateX(-50%) translateY(0); }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .celebrate-toast { transition: none; }
+  }
+
+  /* ---------- 전체 완성(풀하우스) 대형 축하 효과 ---------- */
+  #bigCelebrateOverlay {
+    position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center;
+    background: rgba(46, 38, 32, 0.55); opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    padding: 1.5rem;
+  }
+  #bigCelebrateOverlay.show { opacity: 1; pointer-events: auto; }
+  .confetti-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .confetti-piece {
+    position: absolute; top: -24px; width: 10px; height: 16px; opacity: 0.95; border-radius: 2px;
+    animation-name: confetti-fall; animation-timing-function: cubic-bezier(0.4, 0.1, 0.6, 1); animation-fill-mode: forwards;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(112vh) rotate(360deg); }
+  }
+  .big-celebrate-card {
+    background: var(--surface); border-radius: 24px; padding: 2.4rem 1.8rem; text-align: center;
+    max-width: 340px; position: relative; z-index: 2; box-shadow: 0 8px 0 var(--amber-dark);
+    transform: scale(0.85); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  #bigCelebrateOverlay.show .big-celebrate-card { transform: scale(1); }
+  .big-celebrate-card .emoji { font-size: 3.2rem; margin-bottom: 0.5rem; line-height: 1; }
+  .big-celebrate-card h2 { font-size: 1.7rem; font-weight: 900; margin: 0 0 0.5rem; color: var(--amber-dark); }
+  .big-celebrate-card p { margin: 0 0 1.4rem; color: var(--ink-muted); font-weight: 500; }
+  .big-celebrate-card button {
+    font-family: inherit; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.6rem;
+    border-radius: 12px; border: none; background: var(--amber); color: #3A2708; cursor: pointer; min-height: 52px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-piece { display: none; }
+    #bigCelebrateOverlay, .big-celebrate-card { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-bar">
+    <div>
+      <p class="kicker">경기발달장애인훈련센터 · 낱말 빙고</p>
+      <h1>근로계약서 용어 빙고</h1>
+    </div>
+    <button class="pill-btn" id="textToggle" type="button" aria-pressed="false">🔍 글자 크게</button>
+  </div>
+
+  <!-- ============ 화면 1: 설정 ============ -->
+  <section class="screen active" id="screenSetup">
+    <div class="card">
+      <p style="font-weight:700; margin:0 0 0.6rem;">빙고판 크기를 골라주세요</p>
+      <div class="size-choices" id="sizeChoices">
+        <button class="size-btn" data-size="3" type="button" aria-pressed="false">
+          <span class="n">3×3</span><span class="l">9칸</span>
+        </button>
+        <button class="size-btn" data-size="4" type="button" aria-pressed="true">
+          <span class="n">4×4</span><span class="l">16칸</span>
+        </button>
+      </div>
+
+      <p class="word-count-note" id="wordCountNote"></p>
+
+      <details class="word-edit">
+        <summary>단어 목록 수정</summary>
+        <textarea id="wordTextarea" spellcheck="false"></textarea>
+        <p class="hint">한 줄에 단어 하나씩 적어주세요. 빙고판 칸 수보다 단어가 많아도 괜찮아요 (그중에서 골라 채우면 돼요).</p>
+      </details>
+
+      <button class="btn btn-primary" id="goFillBtn" type="button">빙고판 채우러 가기</button>
+    </div>
+  </section>
+
+  <!-- ============ 화면 2: 판 채우기 ============ -->
+  <section class="screen" id="screenFill">
+    <p class="progress-note" id="fillProgress"></p>
+    <div class="board" id="fillBoard"></div>
+
+    <div class="card" style="padding: 0.4rem 0.8rem;">
+      <p style="font-weight:700; margin: 0.8rem 0 0; text-align:center;">단어를 눌러서 빈칸에 채워요</p>
+      <div class="word-bank" id="wordBank"></div>
+      <p class="bank-empty" id="bankEmptyMsg" hidden>다 채웠어요! 채운 칸을 누르면 다시 뺄 수 있어요.</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="fillResetBtn" type="button">처음부터 다시</button>
+      <button class="btn btn-ghost" id="backToSetupBtn" type="button">크기 다시 고르기</button>
+    </div>
+    <button class="btn btn-primary" id="goPlayBtn" type="button" style="margin-top:0.7rem;" disabled>빙고 게임 시작하기</button>
+  </section>
+
+  <!-- ============ 화면 3: 게임 ============ -->
+  <section class="screen" id="screenPlay">
+    <div class="status-bar">
+      <span class="label">완성된 줄</span>
+      <span class="count"><span id="lineCount">0</span>줄</span>
+    </div>
+
+    <div class="board" id="playBoard"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="playResetBtn" type="button">표시 지우고 다시</button>
+      <button class="btn btn-ghost" id="newBoardBtn" type="button">새 빙고판 만들기</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="celebrate-toast" id="celebrateToast">🎉 빙고!</div>
+
+<div id="bigCelebrateOverlay">
+  <div class="confetti-layer" id="confettiLayer"></div>
+  <div class="big-celebrate-card">
+    <div class="emoji">🎉🎊</div>
+    <h2>모두 완성했어요!</h2>
+    <p>빙고판을 전부 채웠어요.<br>정말 잘했어요!</p>
+    <button type="button" id="bigCelebrateCloseBtn">닫기</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---------- 글자 크게 ----------
+  var textToggle = document.getElementById('textToggle');
+  textToggle.addEventListener('click', function () {
+    var isLarge = document.documentElement.classList.toggle('large-text');
+    textToggle.setAttribute('aria-pressed', isLarge ? 'true' : 'false');
+    textToggle.innerHTML = isLarge ? '🔎 글자 원래대로' : '🔍 글자 크게';
+  });
+
+  // ---------- 기본 단어 (제공된 실제 단어 목록) ----------
+  var DEFAULT_WORDS = [
+    '근로계약서', '사업주', '근로자', '근로계약기간',
+    '휴게시간', '업무', '근로시간', '근무일',
+    '임금', '최저임금', '상여금', '수당',
+    '사본', '지급', '정규직', '연차유급휴가'
+  ];
+
+  var state = {
+    size: 4,
+    words: DEFAULT_WORDS.slice(),
+    boardWords: [],      // 채워진 칸: 단어 또는 null
+    remainingWords: [],  // 아직 안 쓴 단어
+    marked: new Set(),
+    knownLineCount: 0
+  };
+
+  var wordTextarea = document.getElementById('wordTextarea');
+  wordTextarea.value = DEFAULT_WORDS.join('\n');
+
+  function getWordsFromTextarea() {
+    return wordTextarea.value.split('\n').map(function (w) { return w.trim(); }).filter(Boolean);
+  }
+
+  // ---------- 화면 전환 ----------
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+
+  // ---------- 설정 화면 ----------
+  var sizeChoices = document.getElementById('sizeChoices');
+  var wordCountNote = document.getElementById('wordCountNote');
+  var goFillBtn = document.getElementById('goFillBtn');
+
+  function updateWordCountNote() {
+    var words = getWordsFromTextarea();
+    var need = state.size * state.size;
+    if (words.length < need) {
+      wordCountNote.className = 'word-count-note warn';
+      wordCountNote.textContent = '단어가 ' + words.length + '개예요. ' + state.size + '×' + state.size + '판을 채우려면 ' + need + '개 이상 필요해요.';
+      goFillBtn.disabled = true;
+    } else {
+      wordCountNote.className = 'word-count-note';
+      wordCountNote.innerHTML = '단어 <strong>' + words.length + '개</strong> 중에서 <strong>' + need + '칸</strong>을 채우게 돼요.';
+      goFillBtn.disabled = false;
+    }
+  }
+
+  sizeChoices.querySelectorAll('.size-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.size = parseInt(btn.dataset.size, 10);
+      sizeChoices.querySelectorAll('.size-btn').forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      updateWordCountNote();
+    });
+  });
+  wordTextarea.addEventListener('input', updateWordCountNote);
+  updateWordCountNote();
+
+  goFillBtn.addEventListener('click', function () {
+    state.words = getWordsFromTextarea();
+    startFill();
+    showScreen('screenFill');
+  });
+
+  // ---------- 판 채우기 화면 ----------
+  var fillBoard = document.getElementById('fillBoard');
+  var wordBank = document.getElementById('wordBank');
+  var bankEmptyMsg = document.getElementById('bankEmptyMsg');
+  var fillProgress = document.getElementById('fillProgress');
+  var goPlayBtn = document.getElementById('goPlayBtn');
+
+  function startFill() {
+    var total = state.size * state.size;
+    state.boardWords = new Array(total).fill(null);
+    state.remainingWords = state.words.slice();
+    renderFill();
+  }
+
+  function renderFill() {
+    var total = state.size * state.size;
+    fillBoard.className = 'board size-' + state.size;
+    fillBoard.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+      var cell = document.createElement('button');
+      cell.type = 'button';
+      var word = state.boardWords[i];
+      if (word) {
+        cell.className = 'cell filled';
+        cell.textContent = word;
+        cell.addEventListener('click', (function (idx) {
+          return function () { clearCell(idx); };
+        })(i));
+      } else {
+        cell.className = 'cell empty-slot';
+        cell.textContent = '+';
+        cell.disabled = true;
+      }
+      fillBoard.appendChild(cell);
+    }
+
+    wordBank.innerHTML = '';
+    if (state.remainingWords.length === 0) {
+      bankEmptyMsg.hidden = false;
+    } else {
+      bankEmptyMsg.hidden = true;
+      state.remainingWords.forEach(function (word) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'word-chip';
+        chip.textContent = word;
+        chip.addEventListener('click', function () { placeWord(word); });
+        wordBank.appendChild(chip);
+      });
+    }
+
+    var filledCount = state.boardWords.filter(Boolean).length;
+    fillProgress.innerHTML = '<strong>' + filledCount + ' / ' + total + '</strong>칸 채웠어요';
+    goPlayBtn.disabled = filledCount < total;
+  }
+
+  function placeWord(word) {
+    var idx = state.boardWords.indexOf(null);
+    if (idx === -1) return;
+    state.boardWords[idx] = word;
+    var wi = state.remainingWords.indexOf(word);
+    if (wi !== -1) state.remainingWords.splice(wi, 1);
+    renderFill();
+  }
+
+  function clearCell(idx) {
+    var word = state.boardWords[idx];
+    if (!word) return;
+    state.boardWords[idx] = null;
+    state.remainingWords.push(word);
+    renderFill();
+  }
+
+  document.getElementById('fillResetBtn').addEventListener('click', startFill);
+  document.getElementById('backToSetupBtn').addEventListener('click', function () {
+    showScreen('screenSetup');
+  });
+  goPlayBtn.addEventListener('click', function () {
+    startPlay();
+    showScreen('screenPlay');
+  });
+
+  // ---------- 게임 화면 ----------
+  var playBoard = document.getElementById('playBoard');
+  var lineCountEl = document.getElementById('lineCount');
+  var celebrateToast = document.getElementById('celebrateToast');
+
+  function getLines(n) {
+    var lines = [];
+    for (var r = 0; r < n; r++) {
+      var row = [];
+      for (var c = 0; c < n; c++) row.push(r * n + c);
+      lines.push(row);
+    }
+    for (var c2 = 0; c2 < n; c2++) {
+      var col = [];
+      for (var r2 = 0; r2 < n; r2++) col.push(r2 * n + c2);
+      lines.push(col);
+    }
+    var diag1 = [], diag2 = [];
+    for (var i = 0; i < n; i++) {
+      diag1.push(i * n + i);
+      diag2.push(i * n + (n - 1 - i));
+    }
+    lines.push(diag1);
+    lines.push(diag2);
+    return lines;
+  }
+
+  function startPlay() {
+    state.marked = new Set();
+    state.knownLineCount = 0;
+    state.fullyCelebrated = false;
+    lineCountEl.textContent = '0';
+    renderPlay();
+  }
+
+  function renderPlay() {
+    var n = state.size;
+    var total = n * n;
+    var lines = getLines(n);
+    var completedLines = lines.filter(function (line) {
+      return line.every(function (i) { return state.marked.has(i); });
+    });
+    var completedIdxSet = new Set();
+    completedLines.forEach(function (line) { line.forEach(function (i) { completedIdxSet.add(i); }); });
+
+    playBoard.className = 'board size-' + n;
+    playBoard.innerHTML = '';
+    state.boardWords.forEach(function (word, i) {
+      var cell = document.createElement('button');
+      cell.type = 'button';
+      var cls = 'cell filled';
+      if (state.marked.has(i)) cls += ' marked';
+      if (completedIdxSet.has(i)) cls += ' in-line';
+      cell.className = cls;
+      cell.textContent = word;
+      cell.addEventListener('click', function () { toggleMark(i); });
+      playBoard.appendChild(cell);
+    });
+
+    lineCountEl.textContent = completedLines.length;
+
+    if (state.marked.size === total) {
+      if (!state.fullyCelebrated) {
+        state.fullyCelebrated = true;
+        triggerBigCelebration();
+      }
+    } else {
+      state.fullyCelebrated = false;
+      if (completedLines.length > state.knownLineCount) {
+        celebrate();
+      }
+    }
+    state.knownLineCount = completedLines.length;
+  }
+
+  function toggleMark(i) {
+    if (state.marked.has(i)) state.marked.delete(i);
+    else state.marked.add(i);
+    renderPlay();
+  }
+
+  var celebrateTimer = null;
+  function celebrate() {
+    celebrateToast.textContent = '🎉 빙고! (' + state.knownLineCount + '→' + '완성)';
+    celebrateToast.textContent = '🎉 빙고 완성!';
+    celebrateToast.classList.add('show');
+    if (celebrateTimer) clearTimeout(celebrateTimer);
+    celebrateTimer = setTimeout(function () {
+      celebrateToast.classList.remove('show');
+    }, 1600);
+  }
+
+  document.getElementById('playResetBtn').addEventListener('click', startPlay);
+  document.getElementById('newBoardBtn').addEventListener('click', function () {
+    showScreen('screenSetup');
+  });
+
+  // ---------- 전체 완성(풀하우스) 축하 ----------
+  var bigOverlay = document.getElementById('bigCelebrateOverlay');
+  var confettiLayer = document.getElementById('confettiLayer');
+  var bigCelebrateTimer = null;
+  var CONFETTI_COLORS = ['#F0A93E', '#E0604C', '#F4D35E', '#6FB98F', '#5B8DEF'];
+
+  function triggerBigCelebration() {
+    confettiLayer.innerHTML = '';
+    var pieceCount = 70;
+    for (var i = 0; i < pieceCount; i++) {
+      var piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.left = (Math.random() * 100) + '%';
+      piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      piece.style.animationDelay = (Math.random() * 0.7) + 's';
+      piece.style.animationDuration = (2.3 + Math.random() * 1.3) + 's';
+      if (i % 3 === 0) {
+        piece.style.borderRadius = '50%';
+        piece.style.width = '12px';
+        piece.style.height = '12px';
+      }
+      confettiLayer.appendChild(piece);
+    }
+    bigOverlay.classList.add('show');
+    if (bigCelebrateTimer) clearTimeout(bigCelebrateTimer);
+    bigCelebrateTimer = setTimeout(closeBigCelebration, 4200);
+  }
+
+  function closeBigCelebration() {
+    bigOverlay.classList.remove('show');
+    if (bigCelebrateTimer) { clearTimeout(bigCelebrateTimer); bigCelebrateTimer = null; }
+  }
+
+  document.getElementById('bigCelebrateCloseBtn').addEventListener('click', closeBigCelebration);
+  bigOverlay.addEventListener('click', function (e) {
+    if (e.target === bigOverlay) closeBigCelebration();
+  });
+})();
+</script>
+</body>
+</html>

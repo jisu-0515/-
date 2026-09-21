@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>근로계약서 작성 체험</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!--
+  실제 주소 검색 연동: 카카오(다음) 우편번호 서비스 (무료, 승인키 불필요)
+  안내: https://postcode.map.daum.net/guide
+  주의 1: 이 파일은 공단 자체 웹서버(또는 인트라넷)에 올렸을 때만 정상 동작합니다.
+         claude.ai 미리보기 화면에서는 외부 스크립트 로딩이 막혀 있어 동작하지 않습니다.
+  주의 2: 팝업창 대신 "임베드(레이어)" 방식을 사용합니다 — 태블릿에서 팝업이 막히거나
+         크기가 깨지는 문제를 피하기 위함입니다.
+-->
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<style>
+  :root {
+    --bg: #F4F7F5;
+    --surface: #FFFFFF;
+    --surface-muted: #EAF1ED;
+    --text: #20262A;
+    --text-muted: #5B6663;
+    --primary: #2F7A63;
+    --primary-dark: #1F5C49;
+    --primary-tint: #E3F1EA;
+    --accent: #C97A1F;
+    --accent-tint: #FBEEDC;
+    --border: #D8E3DE;
+    --danger: #B3432F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12201B; --surface: #1B2C25; --surface-muted: #223731;
+      --text: #EAF2EE; --text-muted: #9FB3AC; --primary: #57B393;
+      --primary-dark: #7DCBAE; --primary-tint: #223A32; --accent: #E7A855;
+      --accent-tint: #3A2E1C; --border: #2E453C; --danger: #E2836E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12201B; --surface: #1B2C25; --surface-muted: #223731;
+    --text: #EAF2EE; --text-muted: #9FB3AC; --primary: #57B393;
+    --primary-dark: #7DCBAE; --primary-tint: #223A32; --accent: #E7A855;
+    --accent-tint: #3A2E1C; --border: #2E453C; --danger: #E2836E;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { font-size: 18px; }
+  html.large-text { font-size: 23px; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    line-height: 1.65;
+    padding: 2rem 1.1rem 6rem;
+  }
+
+  .wrap { max-width: 700px; margin: 0 auto; }
+
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0 0.9rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .kicker { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 0.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 900; margin: 0; letter-spacing: -0.01em; }
+
+  .top-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 999px; padding: 0.6rem 1rem; font-size: 0.92rem;
+    font-weight: 700; color: var(--text); cursor: pointer; min-height: 48px;
+  }
+  .pill-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .notice {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.15rem; font-size: 0.9rem;
+    color: var(--text-muted); margin-bottom: 1.5rem;
+  }
+  .notice strong { color: var(--text); }
+
+  .mode-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.75rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.1rem; margin-bottom: 2rem;
+  }
+  .mode-label { font-weight: 700; font-size: 0.98rem; }
+  .mode-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .choice-btn { flex: 1 1 auto; text-align: center; }
+  .mode-btn {
+    min-height: 48px; padding: 0.6rem 1.1rem; border-radius: 10px;
+    border: 2px solid var(--border); background: var(--bg);
+    color: var(--text); font-family: inherit; font-size: 0.95rem;
+    font-weight: 700; cursor: pointer;
+  }
+  .mode-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .mode-hint { width: 100%; font-size: 0.82rem; color: var(--text-muted); margin: 0.35rem 0 0; }
+
+  section.group { margin-bottom: 2.25rem; }
+  .group-title {
+    font-size: 1.1rem; font-weight: 900; margin: 0 0 0.3rem;
+    display: flex; align-items: center; gap: 0.55rem;
+  }
+  .group-num {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary-tint); color: var(--primary-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; font-weight: 900;
+  }
+  .group-desc { font-size: 0.88rem; color: var(--text-muted); margin: 0 0 1rem 2.35rem; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.35rem;
+  }
+  .field + .field { margin-top: 1.4rem; padding-top: 1.4rem; border-top: 1px solid var(--border); }
+
+  .field label { display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; }
+  .field-label-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem;
+  }
+  .field-label-row label { margin-bottom: 0; }
+  .field-mode-toggle { display: flex; gap: 0.35rem; flex-shrink: 0; }
+  .mini-mode-btn {
+    min-width: 40px; min-height: 40px; padding: 0.3rem 0.5rem;
+    border-radius: 8px; border: 2px solid var(--border); background: var(--bg);
+    font-size: 1rem; cursor: pointer; line-height: 1;
+  }
+  .mini-mode-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); }
+  .field .field-note { font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0 0; }
+
+  .blank-input {
+    width: 100%; font-family: inherit; font-size: 1.05rem;
+    padding: 0.85rem 1rem; border: 2px solid var(--border);
+    border-radius: 10px; background: var(--bg); color: var(--text);
+    min-height: 52px;
+  }
+  .blank-input:focus { outline: 3px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+
+  .canvas-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+  .blank-canvas {
+    width: 100%; height: 110px; background: var(--bg);
+    border: 2px dashed var(--border); border-radius: 10px;
+    touch-action: none; display: block;
+  }
+  .sign-canvas { height: 190px; }
+  .mini-clear-btn {
+    align-self: flex-start; background: none; border: none;
+    color: var(--primary-dark); font-weight: 700; font-size: 0.88rem;
+    text-decoration: underline; cursor: pointer; font-family: inherit;
+    padding: 0.4rem 0.2rem; min-height: 40px;
+  }
+
+  .fixed-row {
+    display: flex; justify-content: space-between; gap: 1rem;
+    padding: 0.5rem 0; font-size: 0.95rem;
+  }
+  .fixed-row .k { color: var(--text-muted); flex-shrink: 0; }
+  .fixed-row .v { font-weight: 500; text-align: right; }
+
+  .btn {
+    font-family: inherit; font-size: 1.05rem; font-weight: 700;
+    padding: 0.9rem 1.6rem; border-radius: 10px; border: none;
+    cursor: pointer; min-height: 52px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-ghost { background: transparent; border: 2px solid var(--border); color: var(--text); }
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
+  .time-select-wrap { display: flex; gap: 0.6rem; }
+  .time-part { flex: 1; }
+  .addr-selected[hidden] { display: none !important; }
+  .addr-selected {
+    margin-top: 1rem; background: var(--primary-tint); border: 1px solid var(--primary);
+    border-radius: 10px; padding: 0.9rem 1rem; display: flex;
+    justify-content: space-between; align-items: center; gap: 0.75rem; font-weight: 500;
+  }
+  .addr-selected button {
+    background: none; border: none; color: var(--primary-dark); font-weight: 700;
+    text-decoration: underline; cursor: pointer; font-size: 0.92rem; font-family: inherit;
+    min-height: 40px; flex-shrink: 0;
+  }
+
+  /* 카카오 주소검색 임베드 레이어 (태블릿 대응: 전체화면 레이어, 팝업창 미사용) */
+  #addrLayer {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.45);
+  }
+  #addrLayer.open { display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  #addrLayerInner {
+    background: var(--surface); width: 100%; max-width: 500px;
+    height: min(80vh, 560px); border-radius: 16px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  #addrLayerHeader {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+  }
+  #addrLayerHeader span { font-weight: 700; }
+  #addrLayerClose {
+    background: none; border: none; font-size: 1.3rem; cursor: pointer;
+    color: var(--text); min-width: 44px; min-height: 44px;
+  }
+  #addrLayerBody { flex: 1; }
+
+  .preview-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem; margin-top: 1rem;
+  }
+  .preview-item { padding: 0.6rem 0; border-bottom: 1px dashed var(--border); font-size: 0.95rem; }
+  .preview-item:last-child { border-bottom: none; }
+  .preview-item .k { color: var(--text-muted); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem; }
+  .preview-item img { max-width: 100%; background: #fff; border-radius: 6px; border: 1px solid var(--border); }
+  .preview-empty { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* 완성된 계약서 문서 스타일 */
+  .doc-page {
+    font-size: 0.96rem; line-height: 2;
+  }
+  .doc-title {
+    text-align: center; font-size: 1.35rem; font-weight: 900;
+    letter-spacing: 0.15em; margin: 0 0 1.75rem;
+  }
+  .doc-para, .doc-item { margin: 0 0 0.2rem; }
+  .doc-subitem { margin: 0 0 0.2rem 1.4em; }
+  .doc-note { margin: 0 0 1rem; font-size: 0.82rem; color: var(--text-muted); }
+  .doc-date { text-align: center; margin: 1.75rem 0 1.25rem; }
+  .doc-sign-block { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+  .doc-sign-line { margin: 0 0 0.2rem; white-space: pre-wrap; }
+
+  .doc-blank {
+    display: inline-block; padding: 0 0.3em;
+  }
+  .doc-blank.doc-filled {
+    border-bottom: 1.5px solid var(--text); font-weight: 700; color: var(--text);
+  }
+  .doc-blank.doc-empty {
+    min-width: 70px; border-bottom: 1.5px solid var(--text-muted);
+  }
+  .doc-blank-img {
+    display: inline-block; height: 30px; vertical-align: middle;
+    border-bottom: 1.5px solid var(--text); padding: 0 0.2em;
+  }
+  .doc-sign-img { height: 36px; }
+
+  .sign-overlay { position: relative; display: inline-block; padding: 0 0.3rem; vertical-align: middle; }
+  .sign-overlay-label { color: var(--text-muted); }
+  .sign-overlay-img {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 46px; max-width: 100px; width: auto; height: auto;
+    mix-blend-mode: multiply; pointer-events: none;
+  }
+  @media print {
+    .sign-overlay-img { mix-blend-mode: normal; }
+  }
+
+  @media print {
+    @page { size: A4; margin: 15mm; }
+
+    :root, :root[data-theme="dark"] {
+      --bg: #ffffff; --surface: #ffffff; --text: #111111; --text-muted: #444444;
+      --primary: #1F5C49; --primary-dark: #1F5C49; --primary-tint: #ffffff;
+      --accent: #000000; --accent-tint: #ffffff; --border: #999999; --danger: #900000;
+    }
+
+    html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+    .wrap { max-width: 100%; }
+
+    .top-bar, .notice, .mode-bar, #fieldGroups, .group, #previewBtn, .btn-row { display: none !important; }
+
+    .preview-box { border: none; box-shadow: none; padding: 0; margin: 0; border-radius: 0; }
+
+    .doc-page { font-size: 11.3pt; line-height: 1.68; }
+    .doc-title { font-size: 16pt; letter-spacing: 0.18em; margin: 0 0 1.2rem; }
+    .doc-para, .doc-item { margin: 0 0 0.28rem; }
+    .doc-subitem { margin: 0 0 0.28rem 1.4em; }
+    .doc-note { margin: 0 0 0.85rem; font-size: 9.3pt; }
+    .doc-date { margin: 1.5rem 0 1.3rem; }
+    .doc-sign-block { margin-top: 1.4rem; padding-top: 1.2rem; page-break-inside: avoid; }
+    .doc-sign-line { margin: 0 0 0.32rem; }
+    .doc-blank-img { height: 23px; }
+    .doc-sign-img { height: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-bar">
+    <div>
+      <p class="kicker">경기발달장애인훈련센터 · 근로계약서 작성 체험</p>
+      <h1>근로계약서, 이렇게 써봐요</h1>
+    </div>
+    <div class="top-actions">
+      <button class="pill-btn" id="textToggle" type="button" aria-pressed="false">🔍 글자 크게</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    <strong>안내</strong> · 체험용 화면입니다. 입력한 내용은 저장되지 않고, 창을 닫으면 사라져요. 사업주 정보(기관명·주소·대표자)는 이미 정해져 있어 고정으로 보여줘요. 주소 검색은 카카오 우편번호 서비스와 실제로 연동돼요.
+  </div>
+
+  <div class="mode-bar">
+    <span class="mode-label">✏️ 전체 빈칸 한 번에 바꾸기</span>
+    <div class="mode-buttons">
+      <button class="mode-btn" id="modeTypeBtn" type="button">⌨️ 모두 타자로</button>
+      <button class="mode-btn" id="modeWriteBtn" type="button">✍️ 모두 손글씨로</button>
+    </div>
+    <p class="mode-hint">칸마다 따로 바꾸고 싶으면, 각 칸 이름 옆의 작은 ⌨️ / ✍️ 버튼을 눌러요. 방식을 바꾸면 그 칸의 내용은 지워져요.</p>
+  </div>
+
+  <!-- 사업주 정보 (고정) -->
+  <section class="group">
+    <p class="group-title"><span class="group-num">•</span> 사업주 정보 (미리 정해져 있어요)</p>
+    <div class="card">
+      <div class="fixed-row"><span class="k">사업체명</span><span class="v">경기발달장애인훈련센터</span></div>
+      <div class="fixed-row"><span class="k">전화</span><span class="v">031-220-7700</span></div>
+      <div class="fixed-row"><span class="k">주소</span><span class="v">수원시 팔달구 경수대로 518, KB손해보험빌딩</span></div>
+      <div class="fixed-row"><span class="k">대표자</span><span class="v">경기발달 (서명)</span></div>
+    </div>
+  </section>
+
+  <!-- 동적 필드 그룹은 JS가 여기에 채워 넣습니다 -->
+  <div id="fieldGroups"></div>
+
+  <!-- 근로자 주소 -->
+  <section class="group">
+    <p class="group-title"><span class="group-num">10</span> 근로자 주소</p>
+    <p class="group-desc" id="addrGroupDesc"></p>
+    <div class="card" id="addrCard"></div>
+  </section>
+
+  <!-- 서명 -->
+  <section class="group">
+    <p class="group-title"><span class="group-num">11</span> 서명</p>
+    <p class="group-desc">손가락이나 펜으로 화면에 서명해요.</p>
+    <div class="card">
+      <div class="canvas-wrap">
+        <canvas class="blank-canvas sign-canvas" id="signCanvas"></canvas>
+        <button class="mini-clear-btn" id="signClearBtn" type="button">지우기</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="previewBtn" type="button">📄 완성된 계약서로 보기</button>
+  </div>
+
+  <div class="preview-box" id="previewBox" hidden></div>
+
+</div>
+
+<!-- 카카오 주소검색 임베드 레이어 -->
+<div id="addrLayer">
+  <div id="addrLayerInner">
+    <div id="addrLayerHeader">
+      <span>주소 검색</span>
+      <button id="addrLayerClose" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div id="addrLayerBody"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---------- 대표자 서명(직인) 이미지 (파일에 고정 내장) ----------
+  var REP_STAMP_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACtCAYAAADPsY8EAAAUsElEQVR4nO2d348VR3bHP3dgMF4wC+aHDTPADgygaB/2xWAbHDFmEChg7F1poyRSlJdV8ph/Jm+7Wq32wVGSVeJ4MUQ4nskggc0PKVKUKFkDhoWZMQsG29hmsYc1Nw9nmtsz9O2uUz+6q+/tj9Tyj+murtv3e6urzjl1TuvN5c/TR7Tm//kCcKHKjjhwFDhZdSeqYKDqDpTAPqA9fzyaP+oqVIATdD5PGzhSbXfKo5fFmnyZZ6ruSGDS4v0M2A0sqbRHgeg1sf6CzhfXj6xG3hp/QJ7B9kp745mlVXfAAy3ga2BZ1R2JkCvz/zwITFTZER/UeWTdTWce2gg1n/eQZ7W/6o64UEex7kcefJ0XSVUxRY1FWyex7ge+QR54FewBvoM8swFk+mFzDCDTr6XA4VI/QYcpRLQjFd3fijqIdR8whzzgsl7343QElYjsIvAA9wVcG/h2/niXjoCTY8yhbS1XgQMl3s+JmMW6nY7paTDgfb4G3mDh6DdJR1BlkLabnp7vw9LU8VLAe0/M3zd60cYq1hfprGRD8QoihKeBXwe+lw3fpo7ziID3AA8D3W8CeYO9GKh9Z2IT68vIAzsXqP1jdEbPs5Q3cvriIjIVaiFTlTnP7Q8iz74NrPPctjOxiHUEWTy9j/9X/n1kHtgC3vHcdpVMAk8BuwK1/wliHoyGGMQ6ikz0fS6e2sBW5POtROalcyycGxYdL3vsT0gu0Rlp73pu+wLyLNZ6bteKKsW6DnkQlz22eQ/x1gwAN4BN8/c4h37Efp+OcLd47GMoJpFnuhLY67ntO8CQ5zbVVCXWjchrxidvIL7xxK04Asx4avs69fGz3wc+oLMg88UM8hasjCrEOgR87KmtPXQWTOkV/QZkauGTK8iPrE5cRJ7NX3hq7zIVBsiULdZR/Ix2c/NtXcz42zDwvx7ukYWvH1nZ/AOdea0PriADQqmUKdZ1+JmfHkVWwR91+fs0YRcEhwK2HZpJ/In2FiW/acoS6xB+5qjbyN/SUcbr6VQJ9wjNJLDZQzsfU+Liswyxvo7bq38aCfhoAdcKzg3t9Up4raT7hGQGeaZjju1cR6ZewQkp1sQ09bZjO3+GBHyEIIkJOKq87l8C9KUqTuM+yk5TgserFWh36wjuq/E2Mom/o7zGlF2IQT1hFWKnNaVVfEqtWAl86djGJuCmh75kEmJk3YK7UEeRvmmEqmGQhUIF+AK/dsm68RXyA/7coY2PCRgjG0Ks1x2v30T3lb4PNiEb6rK4iLmvvRe30lwC1uAWkniVQAtd32J1CXwYQ16twV4jyBy1qP1LmEXw/8S9O9FyHjdv1RUCLLp8inUV9vuiRpGJfmhM41ZDLejqxEfIW8iWaTyPsL7EuhHd4iTNVsK+9hN8x372AzdxC0G8gscAGB9iXYG9G3I9Eh1VBknQsgm13P0ZiEvADofrZ/DkOHAV6xZkFWnDNvyu9k2E+ILBOauobgdtrFzBbYS9jgc7rItYh7Ff+T9LsTcqBBfID8AYxXw683P37tSKS7hZCZzd7bZiHUUm0DY8hyQQq4pbZAej+Aq06WXOI29EW5yCgGzFavulrgduW17rk1N00kUuQd4SWeGGDU9yDXvBnsIhtNAmMZvt4mMz4TxStpywvG4v/W1duIb8wG0ClG4hWlBfqx1Zt2Bng3wJf1tMutEm3J76xTR5tmAWe8P/b2wu0or1MnZuxvMW19hQxh6hOeqXbyAUs8AzFtetAH6ovUgj1gPYCbXMTWY3CB9buY3shGv9ylfYmaXe0l5gKtZh7JLRjlKOdyrNLBLuFooZOrUJ0ocmJ4HJ4Wu/VBncxa6/qnoIpmK1MVONU75QE+4jbtw6kyQANjliSKo2aXHNCRQhhSZifd2iE23sOu+TG/jfOx8rSSbAqrPK2EzBjGOfTcT6S4sO2Ey6Q/Fh1R2okHRWmTLEa2shMJoOFIn1CJLlxJS7yDbp+4prQrIE+2iwXiQt3lBz4ln0btkTGIQTFolVazRfh39j+QHMFjCLI3s2Ep8TIiaSOfEj/EeZ2Zgq/6/ohDyxal8ZLj7jhANI3EBahBOYmYbSQTVrkbDF1R761Ou06NQYSMTrY9TV6mGQgulA3u5Wbd58F1vjIeCfgO86tJHuQ78WbfPNXiTJmy0r0IWQ3ifH7NhtZNWaQsaU5ye8jPyST+Eu1IQyE+Amcz/b6i3pwhejxBdvkMxxbZ/pfSQdvikryHEidRtZNSPTQ/SerY2ESXK2GTub8BzyAz1H3K7UJCHHP1PN7tpXkPT2Wry8pbNGVu1kW7tPfB3hsvHZBEjsQSwYdagx0EZSzT9F99F6kHDlic4gb0KtC117fubcNWtk1fwKjqHL07+TeOyebWQB9kXF/QjNPsJUBtdmzNHo6mukis4CFo+sWm+VRqhbiEeoD5EfTq8LFeSNkYy6B3HLuJKmhWxVCZFFcDkZWlwsVk0StYOKc1/EPVOLz8XHCOVlHIyJCSTjypjHNq8jmyyL0DoKntBiWqxaC4BpFNZu3OpatZFMKk85tJFmFPGy9DNJFcOj+PE2mngJz+NoUkyLVRMCqEmRaBtV30bS+AzgtwJgVZFgMXISsWuOU84ui+3oBoqd6f+w3TAYcovKQzrlgXyn8bH1zAyhr6OVd3xDBKV6UkwiprBjhLX1XkNns12wxknEGksGknHkoWWN8j4Cqm3CFpONcT4rHy4j/J40GxKz2BjhvIDWifcSsU756YcTz9JdTE/n/C0kQ9jnRwjFCOGDsU8j2oghFvjxZ7GZBoTYbzRKfuKL31NNHdH/quCeRfy3wTnpYGyX+gcXCVM+XrOL4/FbdgCdB+rPFeeasoPui55lVBuUErpmqfaHP474zzUcZ+GoewhdvgjXLCxZWCXjGwB+qjj/H21uUkA3e+duZCHiC5dMeLGQV1bJlFPIIjYR748p/tFcQxeQYoJ6sTuAuXH/37SNW7IReYi+E0lUkQjONyGCV37FwuD2bnHMvnM/TCJuVROOgG7O+jfq7ugZxz7IpeiXGmOQimYBU9acPQkLfMTChVqI52c6nz4BOrGGNLUkK9z3HNrwbS1YYnDOMbpHP5n8uM9htmbYQPkpi1p0Fmr7At1DlYvCVKy/1ffDmB/jVoroMrK6tEky58Jh8gN5fmbYzlXyg0E2IMnMqiQJDaySI603lz9vstp22d4QejW/DtlVu5R8l6F25b2E7iWImL9f0atR89l38ORic4g4nQdZ2Jo0D2FYD9d0ZHXZhxOKNvKA7lbdkRw0NsrLyBzxaeSHMI5eqMeo3/4zY5e66cjq4ggI/fD2IMbrskdW0/bKEk/W9iLjUcsDwTViMrKG8GD45AJhcrPGaD3I49XUv+9Enkldys3vNTnJRKxl5VaNjaKRwsRaAP69P1m0kR0BqxDTXyw7MkwxincOWcK9QbhGeMFuQcxL9xCnSt3wMg0ow0XZwr8rrwx+hIyu3UbYpaljmjCC/QQJApohzKbAhMNEkDC5SKxl7VNKNrUdJJ6kbkX8ClmA/YHsML2Hiw7XsvZZ/ICwOx/eQL6XMmrZFhZ3jm0aMIEEWR+ruiM1YAf+K4i36VQnb+F3O1ER/150QmxiTXiHzgM7WnFfYuIeYp1p4e+td4+OQAfoXp1cm8zEOzGItSiq/SQd4dYpz34IvousnNd4aGsP8kxX012gCWuIYKNlnljLWvRMYJ4teZKFwSJHMdvg9rlVz+JlGsnFkGC6+ElG5RbmFRVHgE8V97Cl0CKQJ9b/9NiRIqax2xB4kifzPg1kHD5GophYgXnEVsJB9DbzZYRZGHYjd62SJ1bTwFhffInbfqGErJW5bTuxo6k3qy0NNYTfnRom5KajimHOmuY48oBimZuWWXDOhrWIa9Xke9xZfMpj9lNNtFeuVzA2sYK8epJ89z+stit8RPephU3y4KJjzKKP/2N4nokL9jXkuU8p+1BKzdwyxOriBXsLWUBVPdL6mloUcRp9sblBzIONuu2v2o98puPKe6evD05eiKDP1d8w/pJFHMSuNGedWIuu0kwS22vCGOKa/RaZGvxGcW23e/sa9HLDMsuaBsxgV4w2i3SZyKpH3FDcRZf8TiO2KTou4g+V12Zhku7SC93EGiKA5S7wHfxaGdLC3U9GtuQaMwM8V3UnCliPrhpLEbkxxN3E+juPHUjzgHAr7CkkzVAMCzNf3EYEEZsZrY30q9SieN3E6vPXsphZYBNhV5BvsXAxtCHgvUJzB/P0+WWsypOcuaVXb6zKdHUTMVGV5dKteiuzK6a1G7SWBA0PkZjcMsIFM6nazprEscZYsOwB/pIHt5HPV1hM15Hb2FWlzuM+EoOxjIpTMFUt1oSPEB//DuKZny333N4gEtZ3AztBmeYkm0Vy3brSRiKzVuInIZwz3eyslW9hSDGOBOa69kl7fegfzS7gkuL8oq3mkP0Zs5K5zXU5N4aBomsfuo2shwJ1xIYJFro3eyUYu6yotrmMA8rzynmjm1hj3m+eDsYu3LcTMdqkwHkJN/qCWOastryLiPZvq+5IQ3jqLtaEv6u6Aw1eyE2W3CtibegNcms4NGK15y/JjkldSRwleepIbtbzPLGWnZy3brzZ5f/fR7abNIL1TDOyhkOzP6rBgDyxhsoj39BgRZ5Yp8rqREODCUXTgJjcrg19TjNnbYiFwu0xRWJ9teDvDQ2++H7RCUVi7fVdpA3x8H7RCc00oCEGjNZGJmINUdy2oUGNiVg1+9cbGmwoytELmIm1rLoCDf2LUYHpZs7aUBtMxWo0TEeOaZG1hnIx1dacqVh7wYRVeQGHhkyMpgDAgX6aBlxWnNsLb5K6YOrSP6sRay98gX9lcM5GeuNNUge65YvNRCPWXvgCf0kn42AWr1EQrd7glUKv1TwHoX93A0whCSNeRTKvmM6bGvyxW3HuBOhNV6bZ7OrAIJIBuhFqNVzQXjCALnHw29oblEgZFbwb/KAZ9B7XSxhAPFSavJ5HFOeWifZzuBB7yaHY+XvFuY9H4GQa8CeKi08ozi2bMkS0iQjqmNaYfehTJwEdsfbCSh8kneS2gO0P479ser9xxvZCW6dAKXWPLLmG/0IbXyM5T2c9ttlgxuPshmmxasr0THnrShgeIJVbWsBeh3YOz7fxNPCZh371O9pBbsF313pz+fPp/9bk6BxHSqr3AllBLrllbgwpep6+ExzHvBvZpnDfgs+zeBpgWlYR4NfKG8fMtxlHg180sRmQ8aZfLNbzmBeiWEHcc9eGeGihq9EwR8ZbO2uBpUnRPgVsUZzf0J98T3n+n2b9z8Vz1gRtfvmY50pV0sxZYQgp7WnKPWB11h+6ma5My9gkxFQwoyEuNEIFeKHbH7qJVeskOEUzHWh4Eu2a5iVyNqjmOQWOKW/0W+X5Db3NdvT2+PN5f8wTq2m90IQWErzc0AABtvAXuVu1hWuPA2ss+9LQO9iYNNcXnVAk1hvoK1d/qjy/obcYQv/6fwmDkvAmgSxnlTeGJsV7P3PV4prcuWqCadSVJsgFJAxsg/KahvqzG30iv02mJ5qK1SZg5RbN/LWfGEb/Ft6BIj5YE8+6S9kRkPnrkMV1DfXiZSSialB5ncpioBHrJewCmpt6UL3Ndsz3/6cZ016g3Slgs2VkI010Vq+yCnt76mntBVqx3kTmJlreBdZZXNcQLxuQoBMbrBJU2+zBmsU85jVhGfAJdkJviI9hZAFtw3Pog1sA+w2DtgklpmkEW3dG0G9PSVgP3La9sa1Yb6B3xSZMY1CgqyFKhrAz+oNs/iv0UuXhkp/1BnbmLJC5ThNSWC82Yvn6RqaNH7h2wDWZ8CXsF07XUebnbKiMYdxSgXpJPOIj8/Vd9O7YhPeBtR76UFdi3IayGJst1GnW4yk5iK807S75A+4Qb7K3fmcDbkIdxnGemsZnTYFnHa49AXyFzIt6Bd+jZtmj8BrszVMgJiqv6ZZ8ivUz3KoRrkDmRU20VvWsxC0ueTMOJqpu+K7WMoMi5KsLt+if4JfvKc51ydmlYSfwpcP1m7G3GuQSorTQTdxdqzP0RwD3Vcyq4IzgkCrSkCEkL8GHDm1sJZBQIVw5zLu4j7BnkIfX6x6vCeRzps14S1LHPuwN8absxl1kmxDbezBCVmu5iUyyXSbpIKvRp9DHI1SNNquNTZidKxtw/35AFtfBU4KGrjB4G4NdiwZ8Q3/bY0OwDj+v7OcoKXdtGeUw7yBmF9dqKneQ0ep16rNdRrszuAzWAieRKDhtZP9iNhFg1d+NMmu3XsHNFpvwNvAf1EOwNjuDQ7EU+GvkR68peNKNrZRcX6HsQsOfAXs8tPMDxA7YJv5q12UtEJ/J+dsa4HfATz3cZwx5UwZdTGVRRVXsi8g8xxdXEdHGOtLO4uYsKeIMYsT/KuNvI8iz+RQ/c/51WGxH8UVVJdxvI7/OY/irqvIpYtCOkcRZ4tOi8TkSzfTHwP1Ff9uHiNSnyWszYpKsjKrEmvAOMsp+4qm9D5EvqQ286KlNX9xETHBjHto6jLxJrqX+3zjyY2jj34HwDAGN/aZULVaAL4A/CtDuOeSLm8PMS1QWp5G3isvxbqq9Q8jnfA/31f1i9szfL2uKUToxiBXk9bKVMLVXB+l4iXqJceQznQrU/jCR5XyIRawgq8tluBdayyOZIjxAFhwr54+6MI44SJKRNAS7kO8gumqKMYk1zQfIAwtlVF+O2Bu/REb1WPeDtZApTDIXfQ994jNTxubvdylQ+87EKtaEs/hx1+axDNkP1gYeUX0xj9foiPMRMoXxPRdN8xB55VdmkjIldrFCx137CuHnnS1kDthedIRKf3Qg417HCSvOhDHk+19GhK/8LLrVwYqZI4jJqw6b7WJlGwvNXrWgDiPrYk4i/Y4xSCRm5pD6Zi1qKFSop1gTziIPXlMcuV85iDgktPXNoqLOYk04j4h2HH+esF7gIPL9tqi5SBN6QawJk0jk+x7COBfqQBv50SYC7SlHSC+JNeEiHedCP8xrX6Hjhh3ALeFI1PSiWNMk89rk+FG13fHGPTp++5gCvIPS62JdzL+yULxLkQimmEle6+ljNZH57cvg/wHMrjKz3VDf9QAAAABJRU5ErkJggg==";
+
+  // ---------- 글자 크게 토글 ----------
+  var textToggle = document.getElementById('textToggle');
+  textToggle.addEventListener('click', function () {
+    var isLarge = document.documentElement.classList.toggle('large-text');
+    textToggle.setAttribute('aria-pressed', isLarge ? 'true' : 'false');
+    textToggle.innerHTML = isLarge ? '🔎 글자 원래대로' : '🔍 글자 크게';
+  });
+
+  // ---------- 빈칸 필드 정의 (원본 근로계약서 기준) ----------
+  var groups = [
+    {
+      num: 1, title: '근로계약 기본정보',
+      fields: [
+        { id: 'employeeName', label: '근로자 성명', placeholder: '예: 홍길동' },
+        { id: 'periodStart', label: '근로계약기간 (시작일)', type: 'date',
+          note: '근로계약기간을 정하지 않는 경우에는 시작일만 적어도 돼요.' },
+        { id: 'periodEnd', label: '근로계약기간 (종료일, 정함이 없으면 비워도 돼요)', type: 'date' },
+        { id: 'jobContent', label: '업무의 내용', placeholder: '예: 제품 포장 및 조립 보조' }
+      ]
+    },
+    {
+      num: 2, title: '근무조건',
+      fields: [
+        { id: 'workTimeStart', label: '근무 시작 시간', type: 'time' },
+        { id: 'workTimeEnd', label: '근무 종료 시간', type: 'time' },
+        { id: 'breakStart', label: '휴게 시작 시간', type: 'time' },
+        { id: 'breakEnd', label: '휴게 종료 시간', type: 'time' },
+        { id: 'workDayStart', label: '근무 시작 요일', type: 'select',
+          options: [['mon', '월'], ['tue', '화'], ['wed', '수'], ['thu', '목'], ['fri', '금'], ['sat', '토'], ['sun', '일']] },
+        { id: 'workDayEnd', label: '근무 종료 요일', type: 'select',
+          options: [['mon', '월'], ['tue', '화'], ['wed', '수'], ['thu', '목'], ['fri', '금'], ['sat', '토'], ['sun', '일']] }
+      ]
+    },
+    {
+      num: 3, title: '임금',
+      fields: [
+        { id: 'wageAmount', label: '월(일, 시간)급', placeholder: '예: 월 2,100,000원' },
+        { id: 'bonus', label: '상여금', type: 'choice', options: ['있음', '없음'] },
+        { id: 'bonusAmount', label: '상여금 금액', placeholder: '예: 500,000원', dependsOn: { id: 'bonus', value: '있음' } },
+        { id: 'otherPay', label: '기타급여 (제수당 등)', type: 'choice', options: ['있음', '없음'] },
+        { id: 'otherPayDetail', label: '기타급여 내용', placeholder: '예: 식대 10만원', dependsOn: { id: 'otherPay', value: '있음' } },
+        { id: 'payMethod', label: '지급방법', type: 'choice', options: ['근로자에게 직접지급', '근로자 명의 예금통장에 입금'] }
+      ]
+    },
+    {
+      num: 4, title: '근로자 연락처 · 계약일',
+      fields: [
+        { id: 'workerContact', label: '근로자 연락처', placeholder: '예: 010-1234-5678' },
+        { id: 'contractDate', label: '계약 체결일', type: 'date' }
+      ]
+    }
+  ];
+
+  var canvasDrawnMap = {};  // fieldId -> boolean
+  var choiceValues = {};    // fieldId -> selected option string
+  var fieldDivMap = {};     // fieldId -> its wrapping .field element (for dependsOn show/hide)
+  var fieldModeMap = {};    // fieldId -> 'type' | 'write' (필드별 입력 방식)
+
+  function fieldMatchesDepends(f) {
+    if (!f.dependsOn) return true;
+    return choiceValues[f.dependsOn.id] === f.dependsOn.value;
+  }
+
+  function updateDependents(parentId) {
+    groups.forEach(function (g) {
+      g.fields.forEach(function (f) {
+        if (f.dependsOn && f.dependsOn.id === parentId) {
+          var div = fieldDivMap[f.id];
+          if (div) div.hidden = !fieldMatchesDepends(f);
+        }
+      });
+    });
+  }
+
+  function buildFieldGroups() {
+    var container = document.getElementById('fieldGroups');
+    container.innerHTML = '';
+    fieldDivMap = {};
+    groups.forEach(function (g) {
+      var section = document.createElement('section');
+      section.className = 'group';
+      container.appendChild(section); // 먼저 문서에 연결 (캔버스 크기 계산을 위해)
+
+      var titleP = document.createElement('p');
+      titleP.className = 'group-title';
+      titleP.innerHTML = '<span class="group-num">' + g.num + '</span> ' + g.title;
+      section.appendChild(titleP);
+
+      var card = document.createElement('div');
+      card.className = 'card';
+      section.appendChild(card); // 여기도 미리 연결
+
+      g.fields.forEach(function (f, idx) {
+        var fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field';
+        fieldDivMap[f.id] = fieldDiv;
+        if (f.dependsOn) fieldDiv.hidden = !fieldMatchesDepends(f);
+        card.appendChild(fieldDiv); // fieldDiv도 즉시 연결
+
+        var labelRow = document.createElement('div');
+        labelRow.className = 'field-label-row';
+
+        var label = document.createElement('label');
+        label.setAttribute('for', 'field_' + f.id);
+        label.textContent = f.label;
+        labelRow.appendChild(label);
+
+        var inputHolder = document.createElement('div');
+        inputHolder.className = 'input-holder';
+        inputHolder.id = 'holder_' + f.id;
+
+        if (f.type !== 'choice' && f.type !== 'date' && f.type !== 'time' && f.type !== 'select') {
+          labelRow.appendChild(buildFieldModeToggle(f, inputHolder));
+        }
+
+        fieldDiv.appendChild(labelRow);
+        fieldDiv.appendChild(inputHolder);
+
+        if (f.note) {
+          var note = document.createElement('p');
+          note.className = 'field-note';
+          note.textContent = f.note;
+          fieldDiv.appendChild(note);
+        }
+
+        if (f.type === 'choice') {
+          renderChoiceField(f, inputHolder);
+        } else if (f.type === 'date') {
+          renderDateField(f, inputHolder);
+        } else if (f.type === 'time') {
+          renderTimeField(f, inputHolder);
+        } else if (f.type === 'select') {
+          renderSelectField(f, inputHolder);
+        } else {
+          if (!(f.id in fieldModeMap)) fieldModeMap[f.id] = 'type';
+          renderFieldInput(f, inputHolder, fieldModeMap[f.id]);
+        }
+      });
+    });
+  }
+
+  function buildFieldModeToggle(field, holder) {
+    var toggle = document.createElement('div');
+    toggle.className = 'field-mode-toggle';
+
+    var typeBtn = document.createElement('button');
+    typeBtn.type = 'button';
+    typeBtn.className = 'mini-mode-btn';
+    typeBtn.textContent = '⌨️';
+    typeBtn.title = '타자로 쓰기';
+    typeBtn.setAttribute('aria-label', field.label + ' - 타자로 쓰기');
+
+    var writeBtn = document.createElement('button');
+    writeBtn.type = 'button';
+    writeBtn.className = 'mini-mode-btn';
+    writeBtn.textContent = '✍️';
+    writeBtn.title = '손글씨로 쓰기';
+    writeBtn.setAttribute('aria-label', field.label + ' - 손글씨로 쓰기');
+
+    function refresh() {
+      var m = fieldModeMap[field.id] || 'type';
+      typeBtn.setAttribute('aria-pressed', m === 'type' ? 'true' : 'false');
+      writeBtn.setAttribute('aria-pressed', m === 'write' ? 'true' : 'false');
+    }
+    refresh();
+
+    typeBtn.addEventListener('click', function () {
+      if (fieldModeMap[field.id] === 'type') return;
+      fieldModeMap[field.id] = 'type';
+      refresh();
+      renderFieldInput(field, holder, 'type');
+    });
+    writeBtn.addEventListener('click', function () {
+      if (fieldModeMap[field.id] === 'write') return;
+      fieldModeMap[field.id] = 'write';
+      refresh();
+      renderFieldInput(field, holder, 'write');
+    });
+
+    toggle.appendChild(typeBtn);
+    toggle.appendChild(writeBtn);
+    return toggle;
+  }
+
+  function renderChoiceField(field, holder) {
+    holder.innerHTML = '';
+    var row = document.createElement('div');
+    row.className = 'mode-buttons';
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', field.label);
+
+    field.options.forEach(function (opt) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mode-btn choice-btn';
+      btn.textContent = opt;
+      btn.setAttribute('aria-pressed', choiceValues[field.id] === opt ? 'true' : 'false');
+      btn.addEventListener('click', function () {
+        choiceValues[field.id] = opt;
+        Array.prototype.forEach.call(row.children, function (b) {
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
+        updateDependents(field.id);
+      });
+      row.appendChild(btn);
+    });
+
+    holder.appendChild(row);
+  }
+
+  function renderDateField(field, holder) {
+    holder.innerHTML = '';
+    var input = document.createElement('input');
+    input.type = 'date';
+    input.className = 'blank-input date-input';
+    input.id = 'field_' + field.id;
+    holder.appendChild(input);
+  }
+
+  function renderTimeField(field, holder) {
+    holder.innerHTML = '';
+    var wrap = document.createElement('div');
+    wrap.className = 'time-select-wrap';
+
+    var hourSelect = document.createElement('select');
+    hourSelect.className = 'blank-input select-input time-part';
+    hourSelect.id = 'field_' + field.id + '_h';
+    var hPlaceholder = document.createElement('option');
+    hPlaceholder.value = '';
+    hPlaceholder.textContent = '시';
+    hourSelect.appendChild(hPlaceholder);
+    for (var h = 0; h <= 23; h++) {
+      var hStr = (h < 10 ? '0' : '') + h;
+      var hOpt = document.createElement('option');
+      hOpt.value = hStr;
+      hOpt.textContent = hStr + '시';
+      hourSelect.appendChild(hOpt);
+    }
+
+    var minSelect = document.createElement('select');
+    minSelect.className = 'blank-input select-input time-part';
+    minSelect.id = 'field_' + field.id + '_m';
+    var mPlaceholder = document.createElement('option');
+    mPlaceholder.value = '';
+    mPlaceholder.textContent = '분';
+    minSelect.appendChild(mPlaceholder);
+    for (var m = 0; m < 60; m += 10) {
+      var mStr = (m < 10 ? '0' : '') + m;
+      var mOpt = document.createElement('option');
+      mOpt.value = mStr;
+      mOpt.textContent = mStr + '분';
+      minSelect.appendChild(mOpt);
+    }
+
+    wrap.appendChild(hourSelect);
+    wrap.appendChild(minSelect);
+    holder.appendChild(wrap);
+  }
+
+  function renderSelectField(field, holder) {
+    holder.innerHTML = '';
+    var select = document.createElement('select');
+    select.className = 'blank-input select-input';
+    select.id = 'field_' + field.id;
+
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '선택해 주세요';
+    select.appendChild(placeholder);
+
+    field.options.forEach(function (opt) {
+      var option = document.createElement('option');
+      option.value = opt[0];
+      option.textContent = opt[1] + '요일';
+      select.appendChild(option);
+    });
+
+    holder.appendChild(select);
+  }
+
+  function renderFieldInput(field, holder, mode) {
+    holder.innerHTML = '';
+    canvasDrawnMap[field.id] = false;
+    if (mode === 'type') {
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'blank-input';
+      input.id = 'field_' + field.id;
+      input.placeholder = field.placeholder || '';
+      input.autocomplete = 'off';
+      holder.appendChild(input);
+    } else {
+      var wrap = document.createElement('div');
+      wrap.className = 'canvas-wrap';
+      var canvas = document.createElement('canvas');
+      canvas.className = 'blank-canvas';
+      canvas.id = 'field_' + field.id;
+      wrap.appendChild(canvas);
+      var clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.className = 'mini-clear-btn';
+      clearBtn.textContent = '지우기';
+      wrap.appendChild(clearBtn);
+      holder.appendChild(wrap);
+
+      setupCanvas(canvas, function () { canvasDrawnMap[field.id] = true; });
+      clearBtn.addEventListener('click', function () {
+        clearCanvas(canvas);
+        canvasDrawnMap[field.id] = false;
+      });
+    }
+  }
+
+  // ---------- 손글씨 캔버스 공통 로직 ----------
+  function setupCanvas(canvas, onDrawStart) {
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+
+    function resize() {
+      var rect = canvas.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text');
+    }
+    resize();
+
+    function pos(e) {
+      var rect = canvas.getBoundingClientRect();
+      var x, y;
+      if (e.touches && e.touches.length) {
+        x = e.touches[0].clientX - rect.left;
+        y = e.touches[0].clientY - rect.top;
+      } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+      }
+      return { x: x, y: y };
+    }
+    function start(e) {
+      drawing = true;
+      if (onDrawStart) onDrawStart();
+      var p = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!drawing) return;
+      var p = pos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      e.preventDefault();
+    }
+    function end() { drawing = false; }
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+  }
+
+  function clearCanvas(canvas) {
+    var ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  // ---------- 입력 방식 일괄 전환 ----------
+  var modeTypeBtn = document.getElementById('modeTypeBtn');
+  var modeWriteBtn = document.getElementById('modeWriteBtn');
+
+  function setAllModes(mode) {
+    groups.forEach(function (g) {
+      g.fields.forEach(function (f) {
+        if (f.type !== 'choice' && f.type !== 'date' && f.type !== 'time' && f.type !== 'select') fieldModeMap[f.id] = mode;
+      });
+    });
+    buildFieldGroups();
+  }
+  modeTypeBtn.addEventListener('click', function () { setAllModes('type'); });
+  modeWriteBtn.addEventListener('click', function () { setAllModes('write'); });
+
+  buildFieldGroups();
+
+  // ---------- 주소 (진짜 http(s) 웹주소일 때만 카카오 검색, 그 외엔 직접 입력) ----------
+  var isRealWebHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:');
+  var isFileProtocol = !isRealWebHost;
+  var chosenAddress = '';
+  var addrCard = document.getElementById('addrCard');
+  var addrGroupDesc = document.getElementById('addrGroupDesc');
+  var addrFieldModeMap = {}; // 주소칸 전용 (타자/손글씨)
+
+  var addrManualField = { id: 'workerAddress', label: '근로자 주소', placeholder: '예: 수원시 팔달구 경수대로 518' };
+
+  function buildAddressSection() {
+    addrCard.innerHTML = '';
+
+    if (isFileProtocol) {
+      // ---- 직접 입력 모드 (파일을 그냥 열었을 때) ----
+      addrGroupDesc.textContent = '지금은 이 파일을 인터넷 서버 없이 열고 있어서, 직접 입력 방식으로 나와요.';
+
+      var note = document.createElement('p');
+      note.className = 'field-note';
+      note.style.marginBottom = '0.9rem';
+      note.textContent = '💡 이 파일을 인터넷 서버(공단 웹서버 등)에 올려서 열면, 이 칸이 자동으로 "주소 검색" 방식으로 바뀝니다.';
+      addrCard.appendChild(note);
+
+      var labelRow = document.createElement('div');
+      labelRow.className = 'field-label-row';
+      var label = document.createElement('label');
+      label.setAttribute('for', 'field_workerAddress');
+      label.textContent = addrManualField.label;
+      labelRow.appendChild(label);
+
+      var inputHolder = document.createElement('div');
+      inputHolder.className = 'input-holder';
+      inputHolder.id = 'holder_workerAddress';
+
+      labelRow.appendChild(buildAddressModeToggle(inputHolder));
+      addrCard.appendChild(labelRow);
+      addrCard.appendChild(inputHolder);
+
+      if (!(addrManualField.id in addrFieldModeMap)) addrFieldModeMap[addrManualField.id] = 'type';
+      renderFieldInput(addrManualField, inputHolder, addrFieldModeMap[addrManualField.id]);
+
+    } else {
+      // ---- 카카오 주소 검색 모드 (웹서버로 열었을 때) ----
+      addrGroupDesc.textContent = '버튼을 누르면 화면 안에 주소 검색창이 나타나요.';
+
+      var btnRow = document.createElement('div');
+      btnRow.className = 'btn-row';
+      btnRow.style.marginTop = '0';
+      var openBtn = document.createElement('button');
+      openBtn.className = 'btn btn-ghost';
+      openBtn.type = 'button';
+      openBtn.id = 'openAddrBtn';
+      openBtn.textContent = '🔍 주소 검색하기';
+      btnRow.appendChild(openBtn);
+      addrCard.appendChild(btnRow);
+
+      var errNote = document.createElement('p');
+      errNote.className = 'field-note';
+      errNote.id = 'addrErrorNote';
+      errNote.hidden = true;
+      addrCard.appendChild(errNote);
+
+      var selectedBox = document.createElement('div');
+      selectedBox.className = 'addr-selected';
+      selectedBox.id = 'addrSelectedBox';
+      selectedBox.hidden = true;
+      var selectedText = document.createElement('span');
+      selectedText.id = 'addrSelectedText';
+      var changeBtn = document.createElement('button');
+      changeBtn.type = 'button';
+      changeBtn.id = 'addrChangeBtn';
+      changeBtn.textContent = '변경';
+      selectedBox.appendChild(selectedText);
+      selectedBox.appendChild(changeBtn);
+      addrCard.appendChild(selectedBox);
+
+      setupKakaoAddressSearch(openBtn, errNote, selectedBox, selectedText, changeBtn);
+    }
+  }
+
+  function buildAddressModeToggle(holder) {
+    var toggle = document.createElement('div');
+    toggle.className = 'field-mode-toggle';
+
+    var typeBtn = document.createElement('button');
+    typeBtn.type = 'button';
+    typeBtn.className = 'mini-mode-btn';
+    typeBtn.textContent = '⌨️';
+    typeBtn.title = '타자로 쓰기';
+
+    var writeBtn = document.createElement('button');
+    writeBtn.type = 'button';
+    writeBtn.className = 'mini-mode-btn';
+    writeBtn.textContent = '✍️';
+    writeBtn.title = '손글씨로 쓰기';
+
+    function refresh() {
+      var m = addrFieldModeMap[addrManualField.id] || 'type';
+      typeBtn.setAttribute('aria-pressed', m === 'type' ? 'true' : 'false');
+      writeBtn.setAttribute('aria-pressed', m === 'write' ? 'true' : 'false');
+    }
+    refresh();
+
+    typeBtn.addEventListener('click', function () {
+      addrFieldModeMap[addrManualField.id] = 'type';
+      refresh();
+      renderFieldInput(addrManualField, holder, 'type');
+    });
+    writeBtn.addEventListener('click', function () {
+      addrFieldModeMap[addrManualField.id] = 'write';
+      refresh();
+      renderFieldInput(addrManualField, holder, 'write');
+    });
+
+    toggle.appendChild(typeBtn);
+    toggle.appendChild(writeBtn);
+    return toggle;
+  }
+
+  function setupKakaoAddressSearch(openAddrBtn, errNote, addrSelectedBox, addrSelectedText, addrChangeBtn) {
+    var postcodeInstance = null;
+
+    openAddrBtn.addEventListener('click', function () {
+      if (typeof daum === 'undefined' || !daum.Postcode) {
+        errNote.hidden = false;
+        errNote.style.color = 'var(--danger)';
+        errNote.textContent = '⚠️ 주소 검색 서비스를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.';
+        return;
+      }
+      errNote.hidden = true;
+      addrLayer.classList.add('open');
+      addrLayerBody.innerHTML = '';
+      requestAnimationFrame(function () {
+        postcodeInstance = new daum.Postcode({
+          oncomplete: function (data) {
+            var addr = data.roadAddress || data.jibunAddress;
+            if (data.buildingName) addr += ' (' + data.buildingName + ')';
+            chosenAddress = addr;
+            addrSelectedText.textContent = addr;
+            addrSelectedBox.hidden = false;
+            closeAddrLayer();
+          },
+          width: '100%',
+          height: '100%'
+        });
+        postcodeInstance.embed(addrLayerBody);
+      });
+    });
+
+    addrChangeBtn.addEventListener('click', function () {
+      chosenAddress = '';
+      addrSelectedBox.hidden = true;
+    });
+  }
+
+  var addrLayer = document.getElementById('addrLayer');
+  var addrLayerBody = document.getElementById('addrLayerBody');
+  var addrLayerClose = document.getElementById('addrLayerClose');
+
+  function closeAddrLayer() {
+    addrLayer.classList.remove('open');
+    addrLayerBody.innerHTML = '';
+  }
+  addrLayerClose.addEventListener('click', closeAddrLayer);
+  addrLayer.addEventListener('click', function (e) {
+    if (e.target === addrLayer) closeAddrLayer();
+  });
+
+  buildAddressSection();
+
+  // ---------- 서명 ----------
+  var signCanvas = document.getElementById('signCanvas');
+  var signHasDrawn = false;
+  setupCanvas(signCanvas, function () { signHasDrawn = true; });
+  document.getElementById('signClearBtn').addEventListener('click', function () {
+    clearCanvas(signCanvas);
+    signHasDrawn = false;
+  });
+
+  // ---------- 완성된 계약서 보기 (원본 표준근로계약서 형식) ----------
+  function insertText(parent, str) {
+    parent.appendChild(document.createTextNode(str));
+  }
+
+  function insertBlank(parent, fieldId) {
+    var el = document.getElementById('field_' + fieldId);
+    if (el && el.tagName === 'CANVAS') {
+      if (canvasDrawnMap[fieldId]) {
+        var img = document.createElement('img');
+        img.className = 'doc-blank-img';
+        img.src = el.toDataURL('image/png');
+        parent.appendChild(img);
+      } else {
+        appendEmptyBlank(parent);
+      }
+    } else if (el && el.tagName === 'INPUT') {
+      if (el.value.trim()) {
+        var span = document.createElement('span');
+        span.className = 'doc-blank doc-filled';
+        span.textContent = (el.type === 'date') ? formatDateKorean(el.value) :
+                            (el.type === 'time') ? formatTimeKorean(el.value) : el.value.trim();
+        parent.appendChild(span);
+      } else {
+        appendEmptyBlank(parent);
+      }
+    } else if (el && el.tagName === 'SELECT') {
+      if (el.value) {
+        var span2 = document.createElement('span');
+        span2.className = 'doc-blank doc-filled';
+        var selectedOpt = el.options[el.selectedIndex];
+        span2.textContent = selectedOpt ? selectedOpt.textContent : el.value;
+        parent.appendChild(span2);
+      } else {
+        appendEmptyBlank(parent);
+      }
+    } else {
+      appendEmptyBlank(parent);
+    }
+  }
+
+  function getCroppedCanvasDataURL(canvas, padding) {
+    padding = padding || 4;
+    var w = canvas.width, h = canvas.height;
+    if (!w || !h) return null;
+    var ctx = canvas.getContext('2d');
+    var data;
+    try {
+      data = ctx.getImageData(0, 0, w, h).data;
+    } catch (e) {
+      return canvas.toDataURL('image/png');
+    }
+    var minX = w, minY = h, maxX = -1, maxY = -1;
+    for (var y = 0; y < h; y++) {
+      var rowStart = y * w * 4;
+      for (var x = 0; x < w; x++) {
+        if (data[rowStart + x * 4 + 3] > 10) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return null; // 아무것도 그려지지 않음
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(w - 1, maxX + padding);
+    maxY = Math.min(h - 1, maxY + padding);
+    var cw = maxX - minX + 1, ch = maxY - minY + 1;
+    var tmp = document.createElement('canvas');
+    tmp.width = cw;
+    tmp.height = ch;
+    tmp.getContext('2d').drawImage(canvas, minX, minY, cw, ch, 0, 0, cw, ch);
+    return tmp.toDataURL('image/png');
+  }
+
+  function insertTimeBlank(parent, fieldId) {
+    var hEl = document.getElementById('field_' + fieldId + '_h');
+    var mEl = document.getElementById('field_' + fieldId + '_m');
+    if (hEl && mEl && hEl.value && mEl.value) {
+      var span = document.createElement('span');
+      span.className = 'doc-blank doc-filled';
+      span.textContent = parseInt(hEl.value, 10) + '시 ' + mEl.value + '분';
+      parent.appendChild(span);
+    } else {
+      appendEmptyBlank(parent);
+    }
+  }
+
+  function formatTimeKorean(hhmm) {
+    var parts = hhmm.split(':');
+    if (parts.length < 2) return hhmm;
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var mStr = (m < 10 ? '0' : '') + m;
+    return h + '시 ' + mStr + '분';
+  }
+
+  function formatDateKorean(isoDate) {
+    var parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
+    return y + '년 ' + m + '월 ' + d + '일';
+  }
+
+  function insertPlainBlank(parent, value) {
+    if (value && value.trim()) {
+      var span = document.createElement('span');
+      span.className = 'doc-blank doc-filled';
+      span.textContent = value.trim();
+      parent.appendChild(span);
+    } else {
+      appendEmptyBlank(parent);
+    }
+  }
+
+  function appendEmptyBlank(parent) {
+    var span = document.createElement('span');
+    span.className = 'doc-blank doc-empty';
+    parent.appendChild(span);
+  }
+
+  function checkMark(fieldId, optionValue) {
+    return choiceValues[fieldId] === optionValue ? '✔' : ' ';
+  }
+
+  function docPara(parent, className) {
+    var p = document.createElement('p');
+    p.className = className || 'doc-item';
+    parent.appendChild(p);
+    return p;
+  }
+
+  function buildContractDocument(container) {
+    container.innerHTML = '';
+    container.className = 'doc-page';
+
+    var title = document.createElement('p');
+    title.className = 'doc-title';
+    title.textContent = '근 로 계 약 서';
+    container.appendChild(title);
+
+    // 인트로 문단
+    var intro = docPara(container, 'doc-para');
+    insertText(intro, '경기발달장애인훈련센터 (이하 "사업주"라 함)과(와) ');
+    insertBlank(intro, 'employeeName');
+    insertText(intro, ' (이하 "근로자"라 함)은 다음과 같이 근로계약을 체결한다.');
+
+    // 1. 근로계약기간
+    var p1 = docPara(container);
+    insertText(p1, '1. 근로계약기간 : ');
+    insertBlank(p1, 'periodStart');
+    insertText(p1, ' 부터 ');
+    insertBlank(p1, 'periodEnd');
+    insertText(p1, ' 까지');
+    var note1 = docPara(container, 'doc-note');
+    insertText(note1, '※ 근로계약기간을 정하지 않는 경우에는 "근로개시일"만 기재');
+
+    // 2. 근무장소 (고정)
+    var p2 = docPara(container);
+    insertText(p2, '2. 근 무 장 소 : 경기발달장애인훈련센터');
+
+    // 3. 업무의 내용
+    var p3 = docPara(container);
+    insertText(p3, '3. 업무의 내용 : ');
+    insertBlank(p3, 'jobContent');
+
+    // 4. 소정근로시간
+    var p4 = docPara(container);
+    insertText(p4, '4. 소정근로시간 : ');
+    insertTimeBlank(p4, 'workTimeStart');
+    insertText(p4, ' 부터 ');
+    insertTimeBlank(p4, 'workTimeEnd');
+    insertText(p4, ' 까지 (휴게시간 : ');
+    insertTimeBlank(p4, 'breakStart');
+    insertText(p4, ' ~ ');
+    insertTimeBlank(p4, 'breakEnd');
+    insertText(p4, ')');
+
+    // 5. 근무일
+    var p5 = docPara(container);
+    insertText(p5, '5. 근무일 : ');
+    insertBlank(p5, 'workDayStart');
+    insertText(p5, ' ~ ');
+    insertBlank(p5, 'workDayEnd');
+    insertText(p5, ' 근무');
+
+    // 6. 임금
+    var p6title = docPara(container);
+    insertText(p6title, '6. 임  금');
+
+    var p6a = docPara(container, 'doc-subitem');
+    insertText(p6a, '- 월(일, 시간)급 : ');
+    insertBlank(p6a, 'wageAmount');
+
+    var p6b = docPara(container, 'doc-subitem');
+    insertText(p6b, '- 상여금 : 있음 (' + checkMark('bonus', '있음') + ') ');
+    if (choiceValues.bonus === '있음') {
+      insertBlank(p6b, 'bonusAmount');
+      insertText(p6b, ' 원');
+    }
+    insertText(p6b, ',  없음 (' + checkMark('bonus', '없음') + ')');
+
+    var p6c = docPara(container, 'doc-subitem');
+    insertText(p6c, '- 기타급여(제수당 등) : 있음 (' + checkMark('otherPay', '있음') + ')');
+    if (choiceValues.otherPay === '있음') {
+      insertText(p6c, ' ');
+      insertBlank(p6c, 'otherPayDetail');
+    }
+    insertText(p6c, ',  없음 (' + checkMark('otherPay', '없음') + ')');
+
+    var p6d = docPara(container, 'doc-subitem');
+    insertText(p6d, '- 임금지급일 : 매월(매주 또는 매일)  25일(휴일의 경우는 전일 지급)');
+
+    var p6e = docPara(container, 'doc-subitem');
+    insertText(p6e, '- 지급방법 : 근로자에게 직접지급(' + checkMark('payMethod', '근로자에게 직접지급') + '),  근로자 명의 예금통장에 입금(' + checkMark('payMethod', '근로자 명의 예금통장에 입금') + ')');
+
+    // 7. 연차유급휴가
+    var p7 = docPara(container);
+    insertText(p7, '7. 연차유급휴가');
+    var p7a = docPara(container, 'doc-subitem');
+    insertText(p7a, '- 연차유급휴가는 근로기준법에서 정하는 바에 따라 부여함');
+
+    // 8. 근로계약서 교부
+    var p8 = docPara(container);
+    insertText(p8, '8. 근로계약서 교부');
+    var p8a = docPara(container, 'doc-subitem');
+    insertText(p8a, '- 사업주는 근로계약을 체결함과 동시에 본 계약서를 사본하여 근로자의 교부요구와 관계없이 근로자에게 교부함(근로기준법 제17조 이행)');
+
+    // 9. 기타
+    var p9 = docPara(container);
+    insertText(p9, '9. 기  타');
+    var p9a = docPara(container, 'doc-subitem');
+    insertText(p9a, '- 이 계약에 정함이 없는 사항은 근로기준법령에 의함');
+
+    // 날짜
+    var dateP = docPara(container, 'doc-date');
+    insertBlank(dateP, 'contractDate');
+
+    // 서명 블록
+    var signBlock = document.createElement('div');
+    signBlock.className = 'doc-sign-block';
+
+    var s1 = docPara(signBlock, 'doc-sign-line');
+    insertText(s1, '(사업주) 사업체명 : 경기발달장애인훈련센터 (전화 : 031-220-7700)');
+    var s2 = docPara(signBlock, 'doc-sign-line');
+    insertText(s2, '        주    소 : 수원시 팔달구 경수대로 518, KB손해보험빌딩');
+    var s3 = docPara(signBlock, 'doc-sign-line');
+    insertText(s3, '        대 표 자 : 경기발달  ');
+    var repWrap = document.createElement('span');
+    repWrap.className = 'sign-overlay';
+    var repLabel = document.createElement('span');
+    repLabel.className = 'sign-overlay-label';
+    repLabel.textContent = '(서명)';
+    repWrap.appendChild(repLabel);
+    var repImg = document.createElement('img');
+    repImg.className = 'sign-overlay-img';
+    repImg.src = REP_STAMP_DATA_URL;
+    repWrap.appendChild(repImg);
+    s3.appendChild(repWrap);
+
+    var s4 = docPara(signBlock, 'doc-sign-line');
+    insertText(s4, '(근로자) 주    소 : ');
+    if (isFileProtocol) {
+      insertBlank(s4, 'workerAddress');
+    } else {
+      insertPlainBlank(s4, chosenAddress);
+    }
+    var s5 = docPara(signBlock, 'doc-sign-line');
+    insertText(s5, '        연 락 처 : ');
+    insertBlank(s5, 'workerContact');
+    var s6 = docPara(signBlock, 'doc-sign-line');
+    insertText(s6, '        성    명 : ');
+    insertBlank(s6, 'employeeName');
+    insertText(s6, '  ');
+
+    var signWrap = document.createElement('span');
+    signWrap.className = 'sign-overlay';
+    var signLabel = document.createElement('span');
+    signLabel.className = 'sign-overlay-label';
+    signLabel.textContent = '(서명)';
+    signWrap.appendChild(signLabel);
+    if (signHasDrawn) {
+      var croppedSign = getCroppedCanvasDataURL(signCanvas);
+      if (croppedSign) {
+        var simg = document.createElement('img');
+        simg.className = 'sign-overlay-img';
+        simg.src = croppedSign;
+        signWrap.appendChild(simg);
+      }
+    }
+    s6.appendChild(signWrap);
+
+    container.appendChild(signBlock);
+
+    var printRow = document.createElement('div');
+    printRow.className = 'btn-row';
+    printRow.style.marginTop = '1.75rem';
+    var printBtn = document.createElement('button');
+    printBtn.type = 'button';
+    printBtn.className = 'btn btn-ghost';
+    printBtn.textContent = '🖨️ 인쇄 / PDF로 저장';
+    printBtn.addEventListener('click', function () { window.print(); });
+    printRow.appendChild(printBtn);
+    container.appendChild(printRow);
+  }
+
+  document.getElementById('previewBtn').addEventListener('click', function () {
+    var box = document.getElementById('previewBox');
+    buildContractDocument(box);
+    box.hidden = false;
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+</body>
+</html>
+
