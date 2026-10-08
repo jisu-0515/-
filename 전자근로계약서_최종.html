@@ -787,6 +787,7 @@
   var addrFieldModeMap = {}; // 주소칸 전용 (타자/손글씨)
 
   var addrManualField = { id: 'workerAddress', label: '근로자 주소', placeholder: '예: 수원시 팔달구 경수대로 518' };
+  var addrDetailField = { id: 'workerAddressDetail', label: '상세 주소 (동·호수 등)', placeholder: '예: 101동 1203호' };
 
   function buildAddressSection() {
     addrCard.innerHTML = '';
@@ -856,9 +857,36 @@
 
       setupKakaoAddressSearch(openBtn, errNote, selectedBox, selectedText, changeBtn);
     }
+
+    // ---- 상세 주소 칸 (동·호수 등) : 두 방식 모두 아래에 표시 ----
+    var detailWrap = document.createElement('div');
+    detailWrap.className = 'field';
+    detailWrap.style.marginTop = '1.4rem';
+    detailWrap.style.paddingTop = '1.4rem';
+    detailWrap.style.borderTop = '1px solid var(--border)';
+    var dRow = document.createElement('div');
+    dRow.className = 'field-label-row';
+    var dLabel = document.createElement('label');
+    dLabel.setAttribute('for', 'field_' + addrDetailField.id);
+    dLabel.textContent = addrDetailField.label;
+    dRow.appendChild(dLabel);
+    var dHolder = document.createElement('div');
+    dHolder.className = 'input-holder';
+    dHolder.id = 'holder_' + addrDetailField.id;
+    dRow.appendChild(buildAddressModeToggle(dHolder, addrDetailField));
+    detailWrap.appendChild(dRow);
+    detailWrap.appendChild(dHolder);
+    var dNote = document.createElement('p');
+    dNote.className = 'field-note';
+    dNote.textContent = '주소를 찾은 다음, 동·호수처럼 더 자세한 내용을 여기에 적어요. 없으면 비워 두어도 돼요.';
+    detailWrap.appendChild(dNote);
+    addrCard.appendChild(detailWrap);
+    if (!(addrDetailField.id in addrFieldModeMap)) addrFieldModeMap[addrDetailField.id] = 'type';
+    renderFieldInput(addrDetailField, dHolder, addrFieldModeMap[addrDetailField.id]);
   }
 
-  function buildAddressModeToggle(holder) {
+  function buildAddressModeToggle(holder, fld) {
+    fld = fld || addrManualField;
     var toggle = document.createElement('div');
     toggle.className = 'field-mode-toggle';
 
@@ -875,21 +903,21 @@
     writeBtn.title = '손글씨로 쓰기';
 
     function refresh() {
-      var m = addrFieldModeMap[addrManualField.id] || 'type';
+      var m = addrFieldModeMap[fld.id] || 'type';
       typeBtn.setAttribute('aria-pressed', m === 'type' ? 'true' : 'false');
       writeBtn.setAttribute('aria-pressed', m === 'write' ? 'true' : 'false');
     }
     refresh();
 
     typeBtn.addEventListener('click', function () {
-      addrFieldModeMap[addrManualField.id] = 'type';
+      addrFieldModeMap[fld.id] = 'type';
       refresh();
-      renderFieldInput(addrManualField, holder, 'type');
+      renderFieldInput(fld, holder, 'type');
     });
     writeBtn.addEventListener('click', function () {
-      addrFieldModeMap[addrManualField.id] = 'write';
+      addrFieldModeMap[fld.id] = 'write';
       refresh();
-      renderFieldInput(addrManualField, holder, 'write');
+      renderFieldInput(fld, holder, 'write');
     });
 
     toggle.appendChild(typeBtn);
@@ -968,7 +996,7 @@
       if (canvasDrawnMap[fieldId]) {
         var img = document.createElement('img');
         img.className = 'doc-blank-img';
-        img.src = el.toDataURL('image/png');
+        img.src = getCroppedCanvasDataURL(el, 6) || el.toDataURL('image/png');
         parent.appendChild(img);
       } else {
         appendEmptyBlank(parent);
@@ -1226,6 +1254,11 @@
     } else {
       insertPlainBlank(s4, chosenAddress);
     }
+    (function () {
+      var dEl = document.getElementById('field_workerAddressDetail');
+      var has = dEl && ((dEl.tagName === 'INPUT' && dEl.value.trim()) || (dEl.tagName === 'CANVAS' && canvasDrawnMap.workerAddressDetail));
+      if (has) { insertText(s4, ' '); insertBlank(s4, 'workerAddressDetail'); }
+    })();
     var s5 = docPara(signBlock, 'doc-sign-line');
     insertText(s5, '        연 락 처 : ');
     insertBlank(s5, 'workerContact');
@@ -1356,12 +1389,12 @@
         y += 0.9 * F;
         return;
       }
-      var size = F, lhMul = 1.7, indent = 0, center = false, wrap = true, color = SAVE_INK, boldAll = false, before = 0, after = 0.2 * F;
+      var keepLead = false, size = F, lhMul = 1.7, indent = 0, center = false, wrap = true, color = SAVE_INK, boldAll = false, before = 0, after = 0.2 * F;
       if (p.kind === 'title') { size = 1.6 * F; lhMul = 1.4; center = true; boldAll = true; after = 1.0 * F; }
       else if (p.kind === 'sub') { indent = 1.4 * F; }
       else if (p.kind === 'note') { size = 0.82 * F; color = SAVE_MUTED; after = 0.5 * F; }
       else if (p.kind === 'date') { center = true; before = 1.0 * F; after = 0.6 * F; }
-      else if (p.kind === 'sign') { wrap = false; after = 0.1 * F; }
+      else if (p.kind === 'sign') { keepLead = true; after = 0.1 * F; }
 
       var toks = tokensOf(p.el, p.kind);
       var availW = maxW - indent;
@@ -1372,7 +1405,7 @@
           if (!wrap) { pieces.push({ t: 'text', s: tk.s, w: ctx.measureText(tk.s).width, bold: boldAll || tk.bold, ul: tk.ul, color: color }); return; }
           tk.s.split(/(\s+)/).forEach(function (part) {
             if (!part) return;
-            if (/^\s+$/.test(part)) { pieces.push({ t: 'text', s: ' ', w: ctx.measureText(' ').width, sp: true, ul: tk.ul, bold: boldAll || tk.bold, color: color }); return; }
+            if (/^\s+$/.test(part)) { pieces.push({ t: 'text', s: part, w: ctx.measureText(part).width, sp: true, ul: tk.ul, bold: boldAll || tk.bold, color: color }); return; }
             var w = ctx.measureText(part).width;
             if (w > availW) {
               Array.prototype.forEach.call(part, function (ch) {
@@ -1401,7 +1434,7 @@
         if (wrap && x + pc.w > availW && cur.some(function (q) { return !q.sp; })) {
           lines.push([]); cur = lines[lines.length - 1]; x = 0;
         }
-        if (pc.sp && cur.length === 0) return;
+        if (pc.sp && cur.length === 0 && !(keepLead && lines.length === 1)) return;
         cur.push({ pc: pc, x: x });
         x += pc.w;
       });
